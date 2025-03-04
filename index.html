@@ -26,16 +26,70 @@
             box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
             border-radius: 8px;
         }
+        input, button {
+            margin-top: 10px;
+            padding: 10px;
+            font-size: 16px;
+        }
+        pre {
+            text-align: left;
+            background: #eee;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
     </style>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js"></script>
 </head>
 <body>
     <header>
         <img src="Site-Header.png" alt="Site Header" class="header">
     </header>
     <div class="container">
-        <h1>Welcome to Our Launch</h1>
-        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas.</p>
-        <p>Stay tuned for more updates as we prepare to go live!</p>
+        <h1>EXE Analyzer</h1>
+        <input type="file" id="fileInput">
+        <button onclick="analyzeFile()">Analyze</button>
+        <pre id="output">Upload an EXE file to analyze.</pre>
+
+        <script>
+            async function loadPyodideAndPackages() {
+                window.pyodide = await loadPyodide();
+                await pyodide.loadPackage(["micropip"]);
+                await pyodide.runPythonAsync(`
+                    import micropip
+                    await micropip.install("pefile")
+                    import pefile
+                    def analyze_exe(data):
+                        try:
+                            pe = pefile.PE(data)
+                            imports = len(pe.DIRECTORY_ENTRY_IMPORT) if hasattr(pe, "DIRECTORY_ENTRY_IMPORT") else 0
+                            exports = len(pe.DIRECTORY_ENTRY_EXPORT.symbols) if hasattr(pe, "DIRECTORY_ENTRY_EXPORT") and pe.DIRECTORY_ENTRY_EXPORT else 0
+                            return {"imports": imports, "exports": exports}
+                        except Exception as e:
+                            return {"error": str(e)}
+                `);
+            }
+            loadPyodideAndPackages();
+
+            async function analyzeFile() {
+                let fileInput = document.getElementById("fileInput");
+                let file = fileInput.files[0];
+                if (!file) {
+                    alert("Please select a file");
+                    return;
+                }
+
+                let reader = new FileReader();
+                reader.readAsArrayBuffer(file);
+                reader.onload = async function () {
+                    let bytes = new Uint8Array(reader.result);
+                    let result = await pyodide.runPythonAsync(`
+                        analyze_exe(${JSON.stringify([...bytes])})
+                    `);
+                    document.getElementById("output").textContent = JSON.stringify(result, null, 2);
+                };
+            }
+        </script>
     </div>
 </body>
 </html>
