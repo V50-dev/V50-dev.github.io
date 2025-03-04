@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Launch Site</title>
+    <title>Coming Soon</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -26,17 +26,22 @@
             box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
             border-radius: 8px;
         }
-        input, button {
-            margin-top: 10px;
-            padding: 10px;
-            font-size: 16px;
+        h1 {
+            font-size: 2em;
+            color: #333;
         }
-        pre {
-            text-align: left;
-            background: #eee;
-            padding: 10px;
-            border-radius: 5px;
-            overflow-x: auto;
+        p {
+            font-size: 1.2em;
+            color: #555;
+        }
+        .coming-soon {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #333;
+        }
+        .date {
+            font-size: 1.1em;
+            color: #777;
         }
     </style>
 </head>
@@ -46,40 +51,8 @@
     </header>
     <div class="container">
         <h1>EXE Analyzer</h1>
-        <input type="file" id="fileInput">
-        <button onclick="analyzeFile()">Analyze</button>
-        <pre id="output">Upload an EXE file to analyze.</pre>
-
-        <script>
-            async function analyzeFile() {
-                let fileInput = document.getElementById("fileInput");
-                let file = fileInput.files[0];
-                if (!file) {
-                    alert("Please select a file");
-                    return;
-                }
-
-                let formData = new FormData();
-                formData.append("exe_file", file);
-
-                // Send the file to the backend for analysis
-                try {
-                    let response = await fetch("http://192.168.1.179:5000/upload", {
-                        method: "POST",
-                        body: formData
-                    });
-
-                    if (response.ok) {
-                        let result = await response.json();
-                        document.getElementById("output").textContent = JSON.stringify(result, null, 2);
-                    } else {
-                        alert("Error: Could not analyze the file");
-                    }
-                } catch (error) {
-                    alert("Error: " + error);
-                }
-            }
-        </script>
+        <p class="coming-soon">Our site is coming soon!</p>
+        <p class="date">Stay tuned for updates. We will be live in the coming months.</p>
     </div>
 </body>
 </html>
