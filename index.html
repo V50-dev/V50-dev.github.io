@@ -39,7 +39,6 @@
             overflow-x: auto;
         }
     </style>
-    <script src="https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js"></script>
 </head>
 <body>
     <header>
@@ -52,25 +51,6 @@
         <pre id="output">Upload an EXE file to analyze.</pre>
 
         <script>
-            async function loadPyodideAndPackages() {
-                window.pyodide = await loadPyodide();
-                await pyodide.loadPackage(["micropip"]);
-                await pyodide.runPythonAsync(`
-                    import micropip
-                    await micropip.install("pefile")
-                    import pefile
-                    def analyze_exe(data):
-                        try:
-                            pe = pefile.PE(data)
-                            imports = len(pe.DIRECTORY_ENTRY_IMPORT) if hasattr(pe, "DIRECTORY_ENTRY_IMPORT") else 0
-                            exports = len(pe.DIRECTORY_ENTRY_EXPORT.symbols) if hasattr(pe, "DIRECTORY_ENTRY_EXPORT") and pe.DIRECTORY_ENTRY_EXPORT else 0
-                            return {"imports": imports, "exports": exports}
-                        except Exception as e:
-                            return {"error": str(e)}
-                `);
-            }
-            loadPyodideAndPackages();
-
             async function analyzeFile() {
                 let fileInput = document.getElementById("fileInput");
                 let file = fileInput.files[0];
@@ -79,15 +59,25 @@
                     return;
                 }
 
-                let reader = new FileReader();
-                reader.readAsArrayBuffer(file);
-                reader.onload = async function () {
-                    let bytes = new Uint8Array(reader.result);
-                    let result = await pyodide.runPythonAsync(`
-                        analyze_exe(${JSON.stringify([...bytes])})
-                    `);
-                    document.getElementById("output").textContent = JSON.stringify(result, null, 2);
-                };
+                let formData = new FormData();
+                formData.append("exe_file", file);
+
+                // Send the file to the backend for analysis
+                try {
+                    let response = await fetch("http://192.168.1.179:5000/upload", {
+                        method: "POST",
+                        body: formData
+                    });
+
+                    if (response.ok) {
+                        let result = await response.json();
+                        document.getElementById("output").textContent = JSON.stringify(result, null, 2);
+                    } else {
+                        alert("Error: Could not analyze the file");
+                    }
+                } catch (error) {
+                    alert("Error: " + error);
+                }
             }
         </script>
     </div>
